@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: transparent;
+            width: 90%;
+            max-width: 500px;
+            height: 300px;
+            perspective: 1000px;
+            margin: 20px 0;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: white;
+        }
+
+        .word {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .category {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .definition {
+            font-size: 1.2em;
+            line-height: 1.4;
+            padding: 0 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .next-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .prev-btn {
+            background: #fff;
+            border: 1px solid #ccc;
+        }
+
+        .know-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            pointer-events: none;
+            animation: celebrate 1s ease-out;
+            opacity: 0;
+            z-index: 1000;
+        }
+
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        /* Category background colors */
+        .anatomy .card-front, .anatomy .card-back { background: #ffebee; }
+        .atoms .card-front, .atoms .card-back { background: #e3f2fd; }
+        .jurassic .card-front, .jurassic .card-back { background: #e8f5e9; }
+        .solar .card-front, .solar .card-back { background: #fff3e0; }
+        .optics .card-front, .optics .card-back { background: #f3e5f5; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Science Flashcards</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+    </div>
+
+    <div class="card" id="flashcard">
+        <div class="card-inner">
+            <div class="card-front">
+                <div class="word" id="word"></div>
+                <div class="category" id="category"></div>
+            </div>
+            <div class="card-back">
+                <div class="definition" id="definition"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="prev-btn" onclick="previousCard()">Previous</button>
+        <button class="know-btn" onclick="markAsKnown()">I Know This!</button>
+        <button class="next-btn" onclick="nextCard()">Next</button>
+    </div>
+
+    <script>
+        // [Previous JavaScript code remains exactly the same]
+        const vocabulary = {
+            "Anatomy": [
+                { word: "Muscle cell", definition: "A tiny part of your muscles that helps them move and do work" },
+                { word: "Red blood cell", definition: "A tiny part of your blood that carries oxygen all around your body" },
+                { word: "Plant cell", definition: "A tiny part of a plant that helps it grow, make food, and stay alive" },
+                { word: "Electrocardiogram (ECG)", definition: "A special test that shows how your heart is beating" }
+            ],
+            "Atoms": [
+                { word: "Atom", definition: "The smallest building block of everything around us" },
+                { word: "Neutron", definition: "A tiny part of an atom that doesn't have any electric charge" },
+                { word: "Proton", definition: "A tiny part of an atom that has a positive electric charge" },
+                { word: "Electron", definition: "A tiny part of an atom that has a negative electric charge" },
+                { word: "Crystalline", definition: "Something that is made up of very tiny, repeating patterns, like salt or diamonds" },
+                { word: "Viscosity", definition: "How thick or runny a liquid is, like how honey is thicker than water" }
+            ],
+            "Jurassic Fossils": [
+                { word: "Half-life", definition: "The time it takes for half of a material to break down or change" },
+                { word: "Fossil", definition: "The remains of something that lived a long, long time ago, like a dinosaur bone" },
+                { word: "Coprolite", definition: "Old, hardened poop from animals that lived a long time ago" },
+                { word: "Petrify", definition: "When something turns into stone over a long time, like a piece of wood" }
+            ],
+            "Solar": [
+                { word: "Fossil fuel", definition: "Energy sources like coal, oil, and gas that come from old plants and animals" },
+                { word: "Kilowatt", definition: "A way to measure how much energy or electricity is used" },
+                { word: "Tilt angle", definition: "The way something is slanted or leaned, like how a solar panel faces the sun" },
+                { word: "Battery", definition: "A device that stores energy and can power things like toys or phones" },
+                { word: "Azimuth", definition: "The direction you are facing or pointing, often used with the position of the sun" }
+            ],
+            "Optics": [
+                { word: "Mirror", definition: "A smooth surface that reflects light and shows your image" },
+                { word: "Concave", definition: "A shape that curves inward, like a bowl" },
+                { word: "Convex", definition: "A shape that curves outward, like a balloon" },
+                { word: "Rainbow", definition: "A colorful arc in the sky made when light shines through rain" },
+                { word: "Refraction", definition: "When light bends as it passes through something, like water or glass" },
+                { word: "Wave", definition: "A movement that carries energy, like light or sound waves" },
+                { word: "Transparent", definition: "Something you can see through clearly, like a clean window" },
+                { word: "Translucent", definition: "Something you can see through, but not very clearly, like frosted glass" }
+            ]
+        };
+
+        let currentCategory = Object.keys(vocabulary)[0];
+        let currentWordIndex = 0;
+        let score = 0;
+        const mastered = new Set();
+
+        const flashcard = document.getElementById('flashcard');
+        const wordElement = document.getElementById('word');
+        const definitionElement = document.getElementById('definition');
+        const categoryElement = document.getElementById('category');
+        const scoreElement = document.getElementById('score');
+
+        function updateCard() {
+            const word = vocabulary[currentCategory][currentWordIndex];
+            wordElement.textContent = word.word;
+            definitionElement.textContent = word.definition;
+            categoryElement.textContent = currentCategory;
+            
+            // Update card background based on category
+            flashcard.className = 'card ' + currentCategory.toLowerCase().split(' ')[0];
+        }
+
+        function nextCard() {
+            flashcard.classList.remove('flipped');
+            if (currentWordIndex < vocabulary[currentCategory].length - 1) {
+                currentWordIndex++;
+            } else {
+                const categories = Object.keys(vocabulary);
+                const currentCategoryIndex = categories.indexOf(currentCategory);
+                if (currentCategoryIndex < categories.length - 1) {
+                    currentCategory = categories[currentCategoryIndex + 1];
+                    currentWordIndex = 0;
+                } else {
+                    currentCategory = categories[0];
+                    currentWordIndex = 0;
+                }
+            }
+            updateCard();
+        }
+
+        function previousCard() {
+            flashcard.classList.remove('flipped');
+            if (currentWordIndex > 0) {
+                currentWordIndex--;
+            } else {
+                const categories = Object.keys(vocabulary);
+                const currentCategoryIndex = categories.indexOf(currentCategory);
+                if (currentCategoryIndex > 0) {
+                    currentCategory = categories[currentCategoryIndex - 1];
+                    currentWordIndex = vocabulary[currentCategory].length - 1;
+                }
+            }
+            updateCard();
+        }
+
+        function markAsKnown() {
+            const wordKey = `${currentCategory}-${vocabulary[currentCategory][currentWordIndex].word}`;
+            if (!mastered.has(wordKey)) {
+                mastered.add(wordKey);
+                score++;
+                scoreElement.textContent = score;
+                showCelebration();
+            }
+            setTimeout(nextCard, 1000);
+        }
+
+        function showCelebration() {
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration';
+            celebration.textContent = '🌟';
+            document.body.appendChild(celebration);
+            setTimeout(() => celebration.remove(), 1000);
+        }
+
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('flipped');
+        });
+
+        // Initialize the first card
+        updateCard();
+    </script>
+</body>
+</html>
